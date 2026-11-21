@@ -1,0 +1,22 @@
+.success {
+    background-color: #06a12a;
+    color: #eff1ef;
+    display: flex;
+    align-items: center;
+  }
+  
+  .error {
+    background-color: #ec1f30;
+    color: #f8f5f5;
+    display: flex;
+    align-items: center;
+  }
+  
+  .iconContainer {
+    display: flex;
+    align-items: center;
+  }
+  
+  .icon {
+    margin-right: 8px;
+  }

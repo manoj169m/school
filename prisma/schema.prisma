@@ -1,0 +1,1151 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id       Int    @id @default(autoincrement())
+  name     String
+  email    String @unique
+  username String @unique
+  password String
+}
+
+model Student {
+  id              Int                 @id @default(autoincrement())
+  admissionNo     String?
+  applicationNo   String?
+  rollNo          String?
+  firstName       String
+  lastName        String
+  dateOfBirth     DateTime
+  placeOfBirth    String?
+  country         String?
+  state           String?
+  cityTownVillage String?
+  address         String?
+  communicationNo BigInt?
+  phoneNo         BigInt?
+  email           String?             @unique
+  aadharNo        BigInt?             @unique
+  emisNo          String?
+  community       String?
+  caste           String?
+  bloodGroup      String?
+  motherTongue    String?
+  religion        String?
+  relationName1   String?
+  relationType1   String?
+  relationNo1     BigInt?
+  relationName2   String?
+  relationType2   String?
+  relationNo2     BigInt?
+  relationName3   String?
+  relationType3   String?
+  relationNo3     BigInt?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  personId        Int                 @unique
+  gender          Gender
+  payment         Payment[]
+  auth            StudentAuth?
+  enrollments     StudentEnrollment[]
+  person          Person              @relation("PersonToStudent", fields: [personId], references: [id])
+
+  @@map("students")
+}
+
+model StudentAuth {
+  id        Int      @id @default(autoincrement())
+  studentId Int      @unique
+  username  String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  student   Student  @relation(fields: [studentId], references: [id])
+
+  @@map("student_auths")
+}
+
+model StudentEnrollment {
+  id                   Int                   @id @default(autoincrement())
+  studentId            Int
+  academicYearId       Int
+  classId              Int
+  sectionId            Int
+  feeCategoryId        Int
+  branchId             Int
+  status               String                @default("Active")
+  enrollmentDate       DateTime              @default(now())
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  hostelStatus         UsageStatus           @default(NotUsing)
+  transportStatus      UsageStatus           @default(NotUsing)
+  fee                  StudentFee?
+  hostelAssignments    HostelAssignment[]
+  subjectResult        SubjectResult[]
+  examResult           ExamResult[]
+  academicYear         AcademicYear          @relation(fields: [academicYearId], references: [id])
+  branch               Branch               @relation(fields: [branchId], references: [id])
+  class                Class                 @relation(fields: [classId], references: [id])
+  feeCategory          FeeCategory           @relation(fields: [feeCategoryId], references: [id])
+  section              Section               @relation(fields: [sectionId], references: [id])
+  student              Student               @relation(fields: [studentId], references: [id])
+  transportAssignments TransportAssignment[]
+  attendanceDetail     AttendanceDetail[]
+  attendanceSummary    AttendanceSummary[]
+  payments             Payment[]
+
+  @@unique([studentId, academicYearId])
+  @@index([studentId, academicYearId], map: "student_academic_index")
+  @@index([academicYearId, classId, sectionId], map: "academic_class_section_index")
+  @@map("student_enrollments")
+}
+
+
+
+model BranchClassSection {
+  id             Int          @id @default(autoincrement())
+  branchId       Int
+  classId        Int
+  sectionId      Int
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  academicYearId Int
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  branch         Branch       @relation(fields: [branchId], references: [id])
+  class          Class        @relation(fields: [classId], references: [id])
+  section        Section      @relation(fields: [sectionId], references: [id])
+
+  @@unique([branchId, classId, sectionId, academicYearId])
+  @@index([branchId, classId, sectionId, academicYearId], map: "branch_class_section_idx")
+  @@map("branch_class_section")
+}
+
+model AcademicYear {
+  id                   Int                   @id @default(autoincrement())
+  startDate            DateTime
+  endDate              DateTime
+  label                String
+  isCurrentYear        Boolean               @default(false)
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  concession           Concession[]
+  individualFee        IndividualFee[]
+  payment              Payment[]
+  academicCalendar     AcademicCalendar[]
+  announcement         Announcement[]
+  branchClassSection   BranchClassSection[]
+  exam                 Exam[]
+  feeByClass           FeeByClass[]
+  hostelAssignments    HostelAssignment[]
+  hostelFees           HostelFee[]
+  message              Message[]
+  periods              PeriodAllocation[]
+  route                Route[]
+  enrollments          StudentEnrollment[]
+  transportAssignments TransportAssignment[]
+  transportFees        TransportFee[]
+  attendanceHeader     AttendanceHeader[]
+  attendanceArchive    AttendanceArchive[]
+  attendanceSummary    AttendanceSummary[]
+  receiptSeries        ReceiptSeries[]
+  grade                Grade[]
+
+  @@index([id, label])
+  @@map("academic_years")
+}
+
+model Class {
+  id                 Int                  @id @default(autoincrement())
+  name               String
+  acronym            String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  displayOrder       Int?
+  concession         Concession[]
+  individualFee      IndividualFee[]
+  announcement       Announcement[]
+  branchClassSection BranchClassSection[]
+  exam               Exam[]
+  feeByClass         FeeByClass[]
+  message            Message[]
+  periods            PeriodAllocation[]
+  enrollments        StudentEnrollment[]
+  attendanceHeader     AttendanceHeader[]
+  attendanceArchive    AttendanceArchive[]
+  attendanceSummary    AttendanceSummary[]
+  grade                Grade[]
+
+  @@index([id, name])
+  @@index([displayOrder])
+  @@map("classes")
+}
+
+model Section {
+  id                 Int                  @id @default(autoincrement())
+  name               String
+  acronym            String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  displayOrder       Int?
+  concession         Concession[]
+  individualFee      IndividualFee[]
+  announcement       Announcement[]
+  branchClassSection BranchClassSection[]
+  exam               Exam[]
+  feeByClass         FeeByClass[]
+  message            Message[]
+  periods            PeriodAllocation[]
+  enrollments        StudentEnrollment[]
+  attendanceHeader     AttendanceHeader[]
+  attendanceArchive    AttendanceArchive[]
+  attendanceSummary    AttendanceSummary[]
+
+   @@index([id, name])
+  @@index([displayOrder])
+  @@map("sections")
+}
+
+model FeeCategory {
+  id          Int                 @id @default(autoincrement())
+  category    String              @unique
+  description String?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  feeByClass  FeeByClass[]
+  enrollments StudentEnrollment[]
+
+  @@index([id, category], map: "id_category_index")
+  @@map("fee_categories")
+}
+
+model Branch {
+  id                 Int                  @id @default(autoincrement())
+  name               String
+  acronym            String
+  label              String
+  inCharge           String
+  contact            BigInt?
+  address            String?
+  location           String?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  concession         Concession[]
+  individualFee      IndividualFee[]
+  payment            Payment[]
+  announcement       Announcement[]
+  branchClassSection BranchClassSection[]
+  branchEmployees    BranchEmployee[]
+  exam               Exam[]
+  feeByClass         FeeByClass[]
+  message            Message[]
+  periods            PeriodAllocation[]
+  enrollments        StudentEnrollment[]
+  vehicle            Vehicle[]
+  events             Event[]
+  attendanceHeader     AttendanceHeader[]
+  attendanceArchive    AttendanceArchive[]
+  attendanceSummary    AttendanceSummary[]
+  receiptSeries        ReceiptSeries[]
+  grade                Grade[]
+
+  @@index([id, name])
+  @@index([name, acronym], map: "name_acronym_index")
+  @@index([name, location], map: "name_location_index")
+  @@map("branches")
+}
+
+model ChangeLog {
+  id          Int      @id @default(autoincrement())
+  tableName   String
+  recordId    Int
+  operation   String
+  changes     Json
+  performedBy Int
+  timestamp   DateTime @default(now())
+
+  @@map("change_logs")
+}
+
+model Vehicle {
+  id            Int      @id @default(autoincrement())
+  vehicleNumber String
+  driverName    String
+  contactNumber String
+  capacity      Int
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  branchId      Int
+  chassisNo     String
+  engineNo      String
+  mielage       String
+  modal         String
+  regNo         String
+  route         Route[]
+  branch        Branch   @relation(fields: [branchId], references: [id])
+
+  @@map("vehicles")
+}
+
+model Route {
+  id                   Int                   @id @default(autoincrement())
+  routeName            String
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  academicYearId       Int
+  numberOfStops        Int
+  vehicleId            Int
+  academicYear         AcademicYear          @relation(fields: [academicYearId], references: [id])
+  vehicle              Vehicle               @relation(fields: [vehicleId], references: [id])
+  stops                Stop[]
+  transportAssignments TransportAssignment[]
+  transportFees        TransportFee[]
+
+  @@map("routes")
+}
+
+model Stop {
+  id                   Int                   @id @default(autoincrement())
+  routeId              Int
+  stopName             String
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  stopNumber           Int
+  distance             String
+  landMark             String
+  route                Route                 @relation(fields: [routeId], references: [id])
+  transportAssignments TransportAssignment[]
+  transportFees        TransportFee[]
+
+  @@map("stops")
+}
+
+model TransportFee {
+  id                   Int                   @id @default(autoincrement())
+  routeId              Int
+  stopId               Int
+  academicYearId       Int
+  feeAmount            Decimal
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  term                 Int
+  accountId            Int
+  transportAssignments TransportAssignment[]
+  academicYear         AcademicYear          @relation(fields: [academicYearId], references: [id])
+  account              Account               @relation(fields: [accountId], references: [id])
+  route                Route                 @relation(fields: [routeId], references: [id])
+  stop                 Stop                  @relation(fields: [stopId], references: [id])
+
+  @@unique([routeId, stopId, term, academicYearId], name: "unique_fee_per_term_per_stop_per_year")
+  @@map("transport_fees")
+}
+
+model TransportAssignment {
+  id                Int               @id @default(autoincrement())
+  enrollmentId      Int
+  routeId           Int
+  stopId            Int
+  feeId             Int?
+  academicYearId    Int
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  endDate           DateTime?
+  startDate         DateTime          @default(now())
+  term              Int
+  status            UsageStatus       @default(Using)
+  academicYear      AcademicYear      @relation(fields: [academicYearId], references: [id])
+  studentEnrollment StudentEnrollment @relation(fields: [enrollmentId], references: [id])
+  transportFee      TransportFee?     @relation(fields: [feeId], references: [id])
+  route             Route             @relation(fields: [routeId], references: [id])
+  stop              Stop              @relation(fields: [stopId], references: [id])
+
+  @@map("transport_assignments")
+}
+
+model Hostel {
+  id          Int                @id @default(autoincrement())
+  hostelName  String
+  capacity    Int
+  type        String
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  floorCount  Int
+  assignments HostelAssignment[]
+  fees        HostelFee[]
+  rooms       Room[]
+
+  @@map("hostels")
+}
+
+model Room {
+  id          Int                @id @default(autoincrement())
+  hostelId    Int
+  roomNumber  String
+  capacity    Int
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  floorNumber Int
+  assignments HostelAssignment[]
+  hostel      Hostel             @relation(fields: [hostelId], references: [id])
+
+  @@map("rooms")
+}
+
+model HostelFee {
+  id             Int                @id @default(autoincrement())
+  hostelId       Int
+  academicYearId Int
+  feeAmount      Decimal
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  term           Int
+  accountId      Int
+  assignments    HostelAssignment[]
+  academicYear   AcademicYear       @relation(fields: [academicYearId], references: [id])
+  account        Account            @relation(fields: [accountId], references: [id])
+  hostel         Hostel             @relation(fields: [hostelId], references: [id])
+
+  @@unique([hostelId, academicYearId, term], name: "unique_fee_per_room_per_term_per_year")
+  @@map("hostel_fees")
+}
+
+model HostelAssignment {
+  id                Int               @id @default(autoincrement())
+  enrollmentId      Int
+  hostelId          Int
+  roomId            Int
+  feeId             Int?
+  academicYearId    Int
+  startDate         DateTime
+  endDate           DateTime
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  status            UsageStatus       @default(Using)
+  term              Int
+  academicYear      AcademicYear      @relation(fields: [academicYearId], references: [id])
+  studentEnrollment StudentEnrollment @relation(fields: [enrollmentId], references: [id])
+  hostelFee         HostelFee?        @relation(fields: [feeId], references: [id])
+  hostel            Hostel            @relation(fields: [hostelId], references: [id])
+  room              Room              @relation(fields: [roomId], references: [id])
+
+  @@map("hostel_assignments")
+}
+
+model AcademicCalendar {
+  id             Int          @id @default(autoincrement())
+  academicYearId Int
+  date           DateTime
+  isHoliday      Boolean
+  description    String?
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+
+  @@index([academicYearId, date], map: "calendar_academicYear_date_index")
+  @@map("academic_calendar")
+}
+
+model Employee {
+  id               Int                     @id @default(autoincrement())
+  firstName        String
+  lastName         String
+  email            String                  @unique
+  phoneNumber      String?
+  dateOfBirth      DateTime?
+  gender           String?
+  maritalStatus    String?
+  address          String?
+  permanentAddress String?
+  dateOfJoin       DateTime
+  departmentId     Int
+  designationId    Int
+  createdAt        DateTime                @default(now())
+  updatedAt        DateTime                @updatedAt
+  personId         Int                     @unique
+  branches         BranchEmployee[]
+  auth             EmployeeAuth?
+  documents        EmployeeDocument[]
+  permissions      EmployeePermission[]
+  qualifications   EmployeeQualification[]
+  department       Department              @relation(fields: [departmentId], references: [id])
+  designation      Designation             @relation(fields: [designationId], references: [id])
+  person           Person                  @relation("PersonToEmployee", fields: [personId], references: [id])
+  periods          PeriodAllocation[]
+
+  @@map("employees")
+}
+
+model EmployeeAuth {
+  id            Int         @id @default(autoincrement())
+  employeeId    Int         @unique
+  username      String      @unique
+  password      String
+  roles         String[]
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  departmentId  Int
+  designationId Int
+  department    Department  @relation(fields: [departmentId], references: [id])
+  designation   Designation @relation(fields: [designationId], references: [id])
+  employee      Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("employee_auth")
+}
+
+model Department {
+  id        Int            @id @default(autoincrement())
+  name      String         @unique
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  auths     EmployeeAuth[]
+  employees Employee[]
+
+  @@map("departments")
+}
+
+model Designation {
+  id        Int            @id @default(autoincrement())
+  title     String         @unique
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  auths     EmployeeAuth[]
+  employees Employee[]
+
+  @@map("designations")
+}
+
+model BranchEmployee {
+  id          Int      @id @default(autoincrement())
+  employeeId  Int
+  branchId    Int
+  role        String
+  permissions String[]
+  createdAt   DateTime @default(now())
+  branch      Branch   @relation(fields: [branchId], references: [id])
+  employee    Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, branchId], name: "unique_employee_branch")
+  @@map("branch_employees")
+}
+
+model EmployeeQualification {
+  id          Int      @id @default(autoincrement())
+  employeeId  Int
+  degree      String
+  field       String
+  institution String
+  year        Int
+  createdAt   DateTime @default(now())
+  employee    Employee @relation(fields: [employeeId], references: [id])
+
+  @@map("employee_qualifications")
+}
+
+model EmployeeDocument {
+  id          Int      @id @default(autoincrement())
+  employeeId  Int
+  type        String
+  documentUrl String
+  createdAt   DateTime @default(now())
+  employee    Employee @relation(fields: [employeeId], references: [id])
+
+  @@map("employee_documents")
+}
+
+model EmployeePermission {
+  id         Int      @id @default(autoincrement())
+  employeeId Int
+  permission String
+  granted    Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@map("employee_permissions")
+}
+
+model Subject {
+  id           Int                @id @default(autoincrement())
+  name         String             @unique
+  code         String?            @unique
+  description  String?
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  examSubjects ExamSubject[]
+  periods      PeriodAllocation[]
+}
+
+model PeriodAllocation {
+  id             Int          @id @default(autoincrement())
+  academicYearId Int
+  branchId       Int
+  classId        Int
+  sectionId      Int
+  subjectId      Int
+  employeeId     Int
+  dayOfWeek      String
+  periodNumber   Int
+  startTime      DateTime
+  endTime        DateTime
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  branch         Branch       @relation(fields: [branchId], references: [id])
+  class          Class        @relation(fields: [classId], references: [id])
+  employee       Employee     @relation(fields: [employeeId], references: [id])
+  section        Section      @relation(fields: [sectionId], references: [id])
+  subject        Subject      @relation(fields: [subjectId], references: [id])
+
+  @@unique([academicYearId, branchId, classId, sectionId, subjectId, dayOfWeek, periodNumber, employeeId], name: "unique_period_allocation")
+  @@map("period_allocations")
+}
+
+model Grade {
+  id          Int     @id @default(autoincrement())
+  minMarks    Float
+  maxMarks    Float
+  grade       String?
+  description String?
+  academicYearId Int
+  branchId       Int
+  classId        Int
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  branch         Branch       @relation(fields: [branchId], references: [id])
+  class          Class        @relation(fields: [classId], references: [id])
+
+  @@map("grades")
+}
+
+model Exam {
+  id             Int           @id @default(autoincrement())
+  name           String
+  branchId       Int
+  classId        Int
+  sectionId      Int
+  academicYearId Int
+  startDate      DateTime
+  endDate        DateTime
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  subjects       ExamSubject[]
+  examResult     ExamResult[]
+  academicYear   AcademicYear  @relation(fields: [academicYearId], references: [id])
+  branch         Branch        @relation(fields: [branchId], references: [id])
+  class          Class         @relation(fields: [classId], references: [id])
+  section        Section       @relation(fields: [sectionId], references: [id])
+
+  @@index([branchId, classId, sectionId, academicYearId], map: "exam_branch_class_section_academicYear_index")
+  @@map("exams")
+}
+
+model ExamSubject {
+  id        Int      @id @default(autoincrement())
+  examId    Int
+  subjectId Int
+  maxMarks  Float
+  minMarks  Float
+  examDate  DateTime
+  startTime DateTime
+  endTime   DateTime
+  duration  Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  exam      Exam     @relation(fields: [examId], references: [id])
+  subject   Subject  @relation(fields: [subjectId], references: [id])
+  subjectResult   SubjectResult[]
+
+  @@index([examId, subjectId], map: "exam_subject_index")
+  @@map("exam_subjects")
+}
+
+model SubjectResult {
+  id            Int         @id @default(autoincrement())
+  enrollmentId  Int
+  examSubjectId Int
+  marksObtained Float
+  isPass        Boolean
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  examSubject   ExamSubject @relation(fields: [examSubjectId], references: [id])
+  studentEnrollment StudentEnrollment @relation(fields: [enrollmentId], references: [id])
+  examResult    ExamResult? @relation(fields: [examResultId], references: [id])
+  examResultId  Int?
+
+  @@index([enrollmentId, examSubjectId], map: "subject_result_student_examSubject_index")
+  @@map("subject_results")
+}
+
+model ExamResult {
+  id             Int             @id @default(autoincrement())
+  examId         Int
+  enrollmentId   Int
+  totalMarks     Float
+  maxTotalMarks  Float
+  percentage     Float
+  isPass         Boolean
+  rank           Int?
+  grade          String?
+  subjectResults SubjectResult[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  exam           Exam            @relation(fields: [examId], references: [id])
+  studentEnrollment StudentEnrollment @relation(fields: [enrollmentId], references: [id])
+
+  @@unique([examId, enrollmentId])
+  @@index([examId, enrollmentId], map: "exam_result_exam_student_index")
+  @@map("exam_results")
+}
+
+model Message {
+  messageId      Int           @id @default(autoincrement())
+  senderId       Int
+  receiverId     Int
+  subject        String
+  messageBody    String
+  sentDate       DateTime      @default(now())
+  status         MessageStatus
+  academicYearId Int
+  classId        Int?
+  sectionId      Int?
+  branchId       Int?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  academicYear   AcademicYear  @relation(fields: [academicYearId], references: [id])
+  branch         Branch?       @relation(fields: [branchId], references: [id])
+  class          Class?        @relation(fields: [classId], references: [id])
+  receiver       Person        @relation("Receiver", fields: [receiverId], references: [id])
+  section        Section?      @relation(fields: [sectionId], references: [id])
+  sender         Person        @relation("Sender", fields: [senderId], references: [id])
+
+  @@index([academicYearId, classId, sectionId, branchId], map: "message_filter_index")
+  @@map("messages")
+}
+
+model Announcement {
+  announcementId Int          @id @default(autoincrement())
+  title          String
+  description    String
+  audience       Audience
+  date           DateTime     @default(now())
+  academicYearId Int
+  classId        Int?
+  sectionId      Int?
+  branchId       Int?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  branch         Branch?      @relation(fields: [branchId], references: [id])
+  class          Class?       @relation(fields: [classId], references: [id])
+  section        Section?     @relation(fields: [sectionId], references: [id])
+
+  @@index([academicYearId, classId, sectionId, branchId], map: "announcement_filter_index")
+  @@map("announcements")
+}
+
+model Person {
+  id               Int       @id @default(autoincrement())
+  firstName        String
+  lastName         String
+  email            String    @unique
+  role             String
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  employee         Employee? @relation("PersonToEmployee")
+  messagesReceived Message[] @relation("Receiver")
+  messagesSent     Message[] @relation("Sender")
+  student          Student?  @relation("PersonToStudent")
+}
+
+model Account {
+  id             Int                @id @default(autoincrement())
+  accountName    String
+  accountType    AccountType
+  description    String?
+  openingBalance Float
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  applicableFor  ApplicableCategory
+  concessions    Concession[]
+  individualFees IndividualFee[]
+  payments       Payment[]
+  feeByClass     FeeByClass[]
+  hostelFee      HostelFee[]
+  transportFee   TransportFee[]
+  receiptSeries  ReceiptConfig[]
+
+  @@index([id, accountName], map: "id_accountName_index")
+  @@index([id, accountName, accountType], map: "id_accountName_accountType_index")
+  @@map("accounts")
+}
+
+model FeeByClass {
+  id              Int           @id @default(autoincrement())
+  accountId       Int
+  term            Int
+  incomeType      String
+  gender          FeeGenderType
+  admissionOnly   Boolean       @default(false)
+  daysScholarOnly Boolean       @default(false)
+  classId         Int
+  sectionId       Int
+  branchId        Int
+  academicYearId  Int
+  feeCategoryId   Int
+  amount          Float
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  dueDate         DateTime
+  academicYear    AcademicYear  @relation(fields: [academicYearId], references: [id])
+  account         Account       @relation(fields: [accountId], references: [id])
+  branch          Branch        @relation(fields: [branchId], references: [id])
+  class           Class         @relation(fields: [classId], references: [id])
+  feeCategory     FeeCategory   @relation(fields: [feeCategoryId], references: [id])
+  section         Section       @relation(fields: [sectionId], references: [id])
+
+  @@unique([accountId, term, classId, sectionId, branchId, academicYearId, feeCategoryId], name: "unique_fee_combination")
+  @@index([accountId], map: "idx_account_id")
+  @@index([classId], map: "idx_class_id")
+  @@index([sectionId], map: "idx_section_id")
+  @@index([branchId], map: "idx_branch_id")
+  @@index([academicYearId], map: "idx_academic_year_id")
+  @@index([feeCategoryId], map: "idx_fee_category_id")
+  @@index([classId, sectionId, branchId, academicYearId], map: "idx_class_section_branch_year")
+  @@index([term, gender], map: "idx_term_gender")
+  @@map("fees_by_class")
+}
+
+model StudentFee {
+  id             Int               @id @default(autoincrement())
+  totalFee       Float
+  concession     Float             @default(0)
+  individualFee  Float             @default(0)
+  finalFee       Float
+  paidAmount     Float             @default(0)
+  balanceAmount  Float
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  enrollmentId   Int               @unique
+  concessions    Concession[]
+  individualFees IndividualFee[]
+  payment        Payment[]
+  enrollment     StudentEnrollment @relation(fields: [enrollmentId], references: [id])
+}
+
+model ConcessionCategory {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  concessions Concession[]
+}
+
+model Concession {
+  id                   Int                @id @default(autoincrement())
+  studentFeeId         Int
+  academicYearId       Int
+  branchId             Int
+  classId              Int
+  sectionId            Int
+  concessionCategoryId Int
+  accountId            Int
+  term                 Int
+  amount               Float
+  description          String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  academicYear         AcademicYear       @relation(fields: [academicYearId], references: [id])
+  account              Account            @relation(fields: [accountId], references: [id])
+  branch               Branch             @relation(fields: [branchId], references: [id])
+  class                Class              @relation(fields: [classId], references: [id])
+  concessionCategory   ConcessionCategory @relation(fields: [concessionCategoryId], references: [id])
+  section              Section            @relation(fields: [sectionId], references: [id])
+  studentFee           StudentFee         @relation(fields: [studentFeeId], references: [id])
+
+  @@index([studentFeeId, academicYearId], map: "idx_student_concession")
+  @@index([accountId], map: "idx_concession_account")
+}
+
+model IndividualFee {
+  id             Int          @id @default(autoincrement())
+  studentFeeId   Int
+  academicYearId Int
+  branchId       Int
+  classId        Int
+  sectionId      Int
+  accountId      Int
+  term           Int
+  customAmount   Float
+  description    String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  account        Account      @relation(fields: [accountId], references: [id])
+  branch         Branch       @relation(fields: [branchId], references: [id])
+  class          Class        @relation(fields: [classId], references: [id])
+  section        Section      @relation(fields: [sectionId], references: [id])
+  studentFee     StudentFee   @relation(fields: [studentFeeId], references: [id])
+
+  @@index([studentFeeId, academicYearId], map: "idx_student_individual_fee")
+  @@index([accountId], map: "idx_individual_fee_account")
+}
+
+model ReceiptSeries {
+  id              Int           @id @default(autoincrement())
+  configId        Int          
+  academicYearId  Int
+  branchId        Int
+  prefix          String       // Generated prefix based on format
+  currentNumber   Int          @default(0)
+  lastResetDate   DateTime     @default(now())
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  config          ReceiptConfig @relation(fields: [configId], references: [id])
+  academicYear    AcademicYear @relation(fields: [academicYearId], references: [id])
+  branch          Branch       @relation(fields: [branchId], references: [id])
+  payments        Payment[]
+
+  @@unique([configId, academicYearId, branchId])
+  @@index([academicYearId, branchId])
+  @@map("receipt_series")
+}
+
+model ReceiptConfig {
+  id                Int      @id @default(autoincrement())
+  accountId         Int?     @unique // null means global config
+  prefixFormat      String   // e.g., "{ACCOUNT}{YEAR}{BRANCH}" or "RCT{YEAR}{BRANCH}"
+  startNumber       Int      @default(1)
+  currentNumber     Int
+  numberFormat      String   @default("00000") // e.g., "00000" for 5 digits
+  resetPeriod       ResetPeriod @default(YEARLY)
+  isActive          Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  account           Account? @relation(fields: [accountId], references: [id])
+  series            ReceiptSeries[]
+
+  @@map("receipt_configs")
+}
+
+enum ResetPeriod {
+  NEVER
+  YEARLY
+  MONTHLY
+}
+
+model Payment {
+  id             Int          @id @default(autoincrement())
+  studentFeeId   Int
+  studentId      Int
+  enrollmentId   Int
+  accountId      Int
+  academicYearId Int
+  branchId       Int
+  term           Int
+  paymentMode    String
+  bankName       String?
+  reference      String?
+  collectedBy    String
+  collectedDate  DateTime
+  amount         Float
+  description    String?
+  receiptNumber   String    @unique
+  receiptSeriesId Int
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  receiptSeries   ReceiptSeries @relation(fields: [receiptSeriesId], references: [id])
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  account        Account      @relation(fields: [accountId], references: [id])
+  branch         Branch       @relation(fields: [branchId], references: [id])
+  studentFee     StudentFee   @relation(fields: [studentFeeId], references: [id])
+  student        Student      @relation(fields: [studentId], references: [id])
+  enrollment     StudentEnrollment @relation(fields: [enrollmentId], references: [id])
+
+  @@index([studentFeeId], map: "idx_payment_student_fee")
+  @@index([studentId, academicYearId, term], map: "idx_payment_student_term")
+  @@index([accountId], map: "idx_payment_account")
+}
+
+model Event {
+  id            Int      @id @default(autoincrement())
+  eventName     String   @db.VarChar(255)
+  locationName  String   @db.VarChar(255)
+  date          DateTime
+  startTime     DateTime
+  endTime       DateTime
+  organizerName String   @db.VarChar(255)
+  description   String
+  type          String
+  branchId      Int?
+  branch        Branch?   @relation(fields: [branchId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum ApplicableCategory {
+  TRANSPORT
+  HOSTEL
+  NONE
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum AttendanceStatus {
+  P
+  A
+  L
+  FN
+  AN
+  H
+  OD
+}
+
+enum MessageStatus {
+  Read
+  Unread
+}
+
+enum Audience {
+  Students
+  Staff
+  All
+}
+
+enum AccountType {
+  ASSET
+  INCOME
+  EXPENSE
+  LIABILITY
+}
+
+enum FeeGenderType {
+  MALE
+  FEMALE
+  BOTH
+}
+
+enum UsageStatus {
+  Using
+  NotUsing
+  Used
+}
+
+// Main attendance header table for daily class-wise records
+model AttendanceHeader {
+  id             Int               @id @default(autoincrement())
+  date           DateTime
+  academicYearId Int
+  branchId       Int
+  classId        Int
+  sectionId      Int
+  totalPresent   Int              // For quick statistics
+  totalAbsent    Int              // For quick statistics
+  totalStudents  Int              // Total students in class
+  isHoliday      Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  createdBy      Int              // Employee ID who created
+  updatedBy      Int              // Employee ID who last updated
+  
+  // Relations
+  academicYear   AcademicYear     @relation(fields: [academicYearId], references: [id])
+  branch         Branch           @relation(fields: [branchId], references: [id])
+  class          Class            @relation(fields: [classId], references: [id])
+  section        Section          @relation(fields: [sectionId], references: [id])
+  details        AttendanceDetail[]
+
+  // Indexes for common queries
+  @@unique([date, branchId, classId, sectionId], name: "unique_daily_class_attendance")
+  @@index([academicYearId, date])
+  @@index([branchId, classId, sectionId, date])
+  @@index([date])
+  
+  @@map("attendance_headers")
+}
+
+// Detailed attendance records for individual students
+model AttendanceDetail {
+  id                 Int              @id @default(autoincrement())
+  attendanceHeaderId Int
+  enrollmentId       Int
+  status            AttendanceStatus
+  remarks           String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  
+  // Relations
+  header            AttendanceHeader  @relation(fields: [attendanceHeaderId], references: [id])
+  enrollment        StudentEnrollment @relation(fields: [enrollmentId], references: [id])
+
+  // Indexes
+  @@unique([attendanceHeaderId, enrollmentId], name: "unique_student_daily_attendance")
+  @@index([enrollmentId, attendanceHeaderId])
+  
+  @@map("attendance_details")
+}
+
+// Archive table for historical attendance data
+model AttendanceArchive {
+  id             Int      @id @default(autoincrement())
+  academicYearId Int
+  branchId       Int
+  classId        Int
+  sectionId      Int
+  monthYear      DateTime // Store only month and year
+  attendanceData Json     // Compressed JSON data containing monthly attendance
+  createdAt      DateTime @default(now())
+  archivedAt     DateTime @default(now())
+  
+  // Relations
+  academicYear   AcademicYear @relation(fields: [academicYearId], references: [id])
+  branch         Branch       @relation(fields: [branchId], references: [id])
+  class          Class        @relation(fields: [classId], references: [id])
+  section        Section      @relation(fields: [sectionId], references: [id])
+
+  // Indexes
+  @@index([academicYearId, monthYear])
+  @@index([branchId, classId, sectionId, monthYear])
+  
+  @@map("attendance_archives")
+}
+
+// Attendance Summary for quick statistics
+model AttendanceSummary {
+  id             Int      @id @default(autoincrement())
+  academicYearId Int
+  branchId       Int
+  classId        Int
+  sectionId      Int
+  enrollmentId   Int
+  monthYear      DateTime
+  totalDays      Int
+  presentDays    Int
+  absentDays     Int
+  lateDays       Int
+  holidayDays    Int
+  odDays         Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  // Relations
+  academicYear   AcademicYear     @relation(fields: [academicYearId], references: [id])
+  branch         Branch           @relation(fields: [branchId], references: [id])
+  class          Class            @relation(fields: [classId], references: [id])
+  section        Section          @relation(fields: [sectionId], references: [id])
+  enrollment     StudentEnrollment @relation(fields: [enrollmentId], references: [id])
+
+  // Indexes
+  @@unique([enrollmentId, monthYear], name: "unique_monthly_student_summary")
+  @@index([academicYearId, monthYear])
+  @@index([branchId, classId, sectionId, monthYear])
+  @@index([enrollmentId])
+  
+  @@map("attendance_summaries")
+}
